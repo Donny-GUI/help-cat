@@ -11,11 +11,15 @@ from lib import (
     uppercase_letter, 
     lowercase_letter, 
     digit_character, 
-    special_character)
+    special_character,
+    flags)
 from documents import Documents
 
 document_names = list(Documents.keys())
 current_password = ""
+flag_flags = list(flags.keys())
+flag_desc = list(flags.values())
+added_flags = []
 
 def search_box(search_input:str):
     search_box = [x for x in document_names if x.startswith(search_input.lower()) or x.startswith(search_input.upper())]
@@ -23,8 +27,20 @@ def search_box(search_input:str):
         return search_box[0]
     except:
         return None
-    
 
+def get_flag_From_desc(desc):
+    for index, flag in enumerate(flag_desc):
+        if desc == flag:
+            print(flag_flags[index])
+            return flag_flags[index]
+    return None
+
+def search_flags(search_input:str):
+    flags_search = [x for x in flag_desc if x.startswith(search_input.lower()) or x.startswith(search_input.upper())]
+    try:
+        return flags_search[0]
+    except:
+        return None
 
 def make_sequence(string):
 
@@ -51,6 +67,7 @@ def make_examples(password, minimum_length):
     return passwords_
 
 def make_command(length,maximum, statusbar_sequence, document_type):
+    flagsx = " ".join([x for x in added_flags if x != None])
     sbs = statusbar_sequence.split("]")
     my_sequence = []
     m_tag = '-m'
@@ -70,12 +87,13 @@ def make_command(length,maximum, statusbar_sequence, document_type):
         if x.startswith("[i"):
             my_sequence.append('?d')
         x = "".join(my_sequence)
-    cmdstr = f"hashcat -a 3 -1 ?l?u?d?s -i --increment-min={length} --increment-max={maximum} {m_tag} {docu} <hash> {x}"
+    cmdstr = f"hashcat -a 3 -1 ?l?u?d?s -i {flagsx} --increment-min={length} --increment-max={maximum} {m_tag} {docu} <hash> {x}"
     return cmdstr 
 
 
 def main():
     global current_password
+    global added_flags
     sg.SetOptions(margins=(0,0), element_padding=(0,0))
     minimum_length = 0
     maximum_length = 8
@@ -124,7 +142,9 @@ def main():
                   key='EXAMPLES',
                   background_color='black',
                   text_color='red', 
-                  font='italicubuntu 10')],     # examples multiline
+                  font='italicubuntu 10')],
+    [sg.T("Search for flags:"), sg.Input("", key='FLAGS_SEARCH', enable_events=True, pad=(5,5)), sg.Button("Add Flag"), 
+     sg.Combo(values=flag_desc, key='FLAGS', size=(50,30), enable_events=True)], 
     [sg.Input(f"", 
               key="COMMAND", 
               size=(200,1), 
@@ -139,10 +159,22 @@ def main():
     ##
     #
     document_type = ""
+    
     while True:
         event_key, values = w.read()
         w.refresh()
         document_type=values['DOC']
+        if event_key == 'Add Flag':
+            description = values['FLAGS']
+            flag = get_flag_From_desc(description)
+            if not flag in added_flags:
+                added_flags.append(flag)
+                w['COMMAND'].update(make_command(
+                        length=minimum_length, 
+                        maximum=maximum_length, 
+                        statusbar_sequence=current_password,
+                        document_type=document_type))
+                w.refresh() 
         if event_key == 'SEARCH':
             w['SEARCH'].update(values['SEARCH'])
             w.refresh()
@@ -156,8 +188,40 @@ def main():
                     statusbar_sequence=current_password,
                     document_type=document_type))
             w.refresh()
+        #
+        #   update document
+        #
         if event_key == 'DOC':
             w['DOC'].update(values['DOC'])
+            w.refresh()
+            w['COMMAND'].update(make_command(
+                length=minimum_length, 
+                maximum=maximum_length, 
+                statusbar_sequence=current_password,
+                document_type=document_type))
+        #
+        #   FLAG search
+        #
+        if event_key == 'FLAGS_SEARCH':
+            w['FLAGS_SEARCH'].update(values['FLAGS_SEARCH'])
+            w.refresh()
+            search_for_flag = values['FLAGS_SEARCH']
+            if not search_for_flag == '' or not search_for_flag == None:
+                searchf = search_flags(search_for_flag)
+                w['FLAGS'].update(searchf)
+                adding_to_flags = get_flag_From_desc(search_for_flag)
+                added_flags.append(adding_to_flags)
+                w['COMMAND'].update(make_command(
+                    length=minimum_length, 
+                    maximum=maximum_length, 
+                    statusbar_sequence=current_password,
+                    document_type=document_type))
+            w.refresh()
+        #
+        #   update flags
+        #
+        if event_key == 'FLAGS':
+            w['FLAGS'].update(values['FLAGS'])
             w.refresh()
             w['COMMAND'].update(make_command(
                 length=minimum_length, 
@@ -303,6 +367,7 @@ def main():
         if event_key=="CLEAR":
             minimum_length=0
             maximum_length=8
+            added_flags = []
             w['MINIMUM_LENGTH'].update(minimum_length)
             w['MAXIMUM_LENGTH'].update(maximum_length)
             w["EXAMPLES"].update("")
