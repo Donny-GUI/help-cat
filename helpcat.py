@@ -12,15 +12,30 @@ from lib import (
     lowercase_letter, 
     digit_character, 
     special_character,
-    flags)
+    flags,
+    positionals,
+    attack_types)
 from documents import Documents
 
 document_names = list(Documents.keys())
 current_password = ""
 flag_flags = list(flags.keys())
 flag_desc = list(flags.values())
+attacks = list(attack_types.values())
+attacks_number = list(attack_types.keys())
 added_flags = []
+attack_type = []
 
+
+def get_attack_from_desc(attack_description:str):
+    global attack_type
+    attack_type = []
+    for index, a in enumerate(attacks):
+        if a == attack_description:
+            return attacks_number[index]
+    return None
+            
+    
 def search_box(search_input:str):
     search_box = [x for x in document_names if x.startswith(search_input.lower()) or x.startswith(search_input.upper())]
     try:
@@ -28,7 +43,7 @@ def search_box(search_input:str):
     except:
         return None
 
-def get_flag_From_desc(desc):
+def get_flag_From_desc(desc:str):
     for index, flag in enumerate(flag_desc):
         if desc == flag:
             print(flag_flags[index])
@@ -67,7 +82,12 @@ def make_examples(password, minimum_length):
     return passwords_
 
 def make_command(length,maximum, statusbar_sequence, document_type):
+    global attack_type
     flagsx = " ".join([x for x in added_flags if x != None])
+    if attack_type == [] or attack_type[0] == None:
+        attack = ""
+    else:
+        attack = f"-a {attack_type[0]}"
     sbs = statusbar_sequence.split("]")
     my_sequence = []
     m_tag = '-m'
@@ -87,11 +107,12 @@ def make_command(length,maximum, statusbar_sequence, document_type):
         if x.startswith("[i"):
             my_sequence.append('?d')
         x = "".join(my_sequence)
-    cmdstr = f"hashcat -a 3 -1 ?l?u?d?s -i {flagsx} --increment-min={length} --increment-max={maximum} {m_tag} {docu} <hash> {x}"
+    cmdstr = f"hashcat {attack} -1 ?l?u?d?s -i {flagsx} --increment-min={length} --increment-max={maximum} {m_tag} {docu} <hash> {x}"
     return cmdstr 
 
 
 def main():
+    global attack_type
     global current_password
     global added_flags
     sg.SetOptions(margins=(0,0), element_padding=(0,0))
@@ -107,6 +128,7 @@ def main():
     [sg.HorizontalSeparator()],
     [sg.T("Search for hash type:"), sg.Input("", key='SEARCH', enable_events=True, pad=(5,5)), 
      sg.Combo(values=document_names, key='DOC', size=(50,30), enable_events=True)],           # document type
+    [sg.T("Attack Type"), sg.Combo(attacks, enable_events=True, key='ATTACK')],
     [sg.T("Set minimum length:"),
      sg.Combo(                                   # minimum combo
         min_lengths, 
@@ -143,8 +165,10 @@ def main():
                   background_color='black',
                   text_color='red', 
                   font='italicubuntu 10')],
-    [sg.T("Search for flags:"), sg.Input("", key='FLAGS_SEARCH', enable_events=True, pad=(5,5)), sg.Button("Add Flag"), 
-     sg.Combo(values=flag_desc, key='FLAGS', size=(50,30), enable_events=True)], 
+    [sg.T("Search for flags:"), sg.Input("", key='FLAGS_SEARCH', enable_events=True, pad=(5,5))],
+    [sg.Button("Add Flag"), 
+     sg.Combo(values=flag_desc, key='FLAGS', size=(50,30), enable_events=True),
+     sg.Input("", key='HIDDEN POSITIONAL', visible=False)], 
     [sg.Input(f"", 
               key="COMMAND", 
               size=(200,1), 
@@ -164,17 +188,42 @@ def main():
         event_key, values = w.read()
         w.refresh()
         document_type=values['DOC']
+        
+        if event_key == 'ATTACK':
+            atk_desc = values['ATTACK']
+            atk = get_attack_from_desc(atk_desc)
+            print(atk)
+            attack_type.append(atk)
+            print(attack_type)
+            w['COMMAND'].update(make_command(
+                        length=minimum_length, 
+                        maximum=maximum_length, 
+                        statusbar_sequence=current_password,
+                        document_type=document_type))
+        
+        if not w['FLAGS'] == "":
+            description = values['FLAGS']
+            flag = get_flag_From_desc(description)
+            if flag in positionals:
+                w['HIDDEN POSITIONAL'].update(visible=True)
+            else:
+                w['HIDDEN POSITIONAL'].update(visible=False)
+                w['HIDDEN POSITIONAL'].update("")
+        
         if event_key == 'Add Flag':
             description = values['FLAGS']
             flag = get_flag_From_desc(description)
             if not flag in added_flags:
+                
                 added_flags.append(flag)
+                if not w['HIDDEN POSITIONAL'] == '':
+                    added_flags.append(values['HIDDEN POSITIONAL'])
                 w['COMMAND'].update(make_command(
                         length=minimum_length, 
                         maximum=maximum_length, 
                         statusbar_sequence=current_password,
                         document_type=document_type))
-                w.refresh() 
+                w.refresh()
         if event_key == 'SEARCH':
             w['SEARCH'].update(values['SEARCH'])
             w.refresh()
@@ -249,8 +298,7 @@ def main():
             w["COMMAND"].update(make_command(minimum_length,
                 maximum_length,
                 current_password,
-                document_type=document_type)
-                )
+                document_type=document_type))
             w.refresh()
             w["EXAMPLES"].update("")
             for x in make_examples(xcurrent_password, minimum_length):
@@ -353,8 +401,7 @@ def main():
             w['COMMAND'].update(make_command(minimum_length,
                 maximum_length,
                 current_password,
-                document_type=document_type)
-                )
+                document_type=document_type))
             w.refresh()
             
         if event_key=="CURRENT_PASSWORD_SET":
