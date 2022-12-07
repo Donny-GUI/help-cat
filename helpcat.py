@@ -46,7 +46,6 @@ def search_box(search_input:str):
 def get_flag_From_desc(desc:str):
     for index, flag in enumerate(flag_desc):
         if desc == flag:
-            print(flag_flags[index])
             return flag_flags[index]
     return None
 
@@ -61,7 +60,6 @@ def make_sequence(string):
 
     sequences = []
     sequence = str(string).split(']')
-    print(sequence)
     for x in sequence:
         if x.startswith("[u"):
             sequences.append(random.choice(ascii_uppercase))
@@ -192,9 +190,7 @@ def main():
         if event_key == 'ATTACK':
             atk_desc = values['ATTACK']
             atk = get_attack_from_desc(atk_desc)
-            print(atk)
             attack_type.append(atk)
-            print(attack_type)
             w['COMMAND'].update(make_command(
                         length=minimum_length, 
                         maximum=maximum_length, 
