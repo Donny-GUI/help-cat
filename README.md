@@ -8,6 +8,11 @@ A gui that helps you set up your hashcat commands. Provides password examples, s
 
 ### For helping you make long hashcat system commands
 
+## TODO
+
+1. add 'get hash from encrypted file' button
+2. add 'import hash from file' button
+
 
 ## linux / macos
 
