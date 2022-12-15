@@ -126,14 +126,15 @@ def main():
     [sg.HorizontalSeparator()],
     [sg.T("Search for hash type:"), sg.Input("", key='SEARCH', enable_events=True, pad=(5,5)), 
      sg.Combo(values=document_names, key='DOC', size=(50,30), enable_events=True)],           # document type
-    [sg.T("Attack Type"), sg.Combo(attacks, enable_events=True, key='ATTACK')],
-    [sg.T("Set minimum length:"),
+    [ sg.T("Attack Type        ", size=(17,1), pad=(5,5)), 
+    sg.Combo(attacks, enable_events=True, key='ATTACK',pad=(5,5)),
+    sg.T("Set minimum length:", pad=(5,5)),
      sg.Combo(                                   # minimum combo
         min_lengths, 
         default_value=minimum_length,
         enable_events=True,
-        key='MINIMUM_LENGTH'),
-     sg.T("Set maximum length:"),
+        key='MINIMUM_LENGTH',pad=(5,5)),
+     sg.T("Set maximum length:",pad=(5,5)),
      sg.Combo(                                   # maximum combo
         max_lengths, 
         enable_events=True, 
@@ -150,6 +151,7 @@ def main():
      sg.B('Back Space', key="BACKSPACE"),        # backspace button
      sg.B("Clear",                               # clear button
           key="CLEAR")],
+    [sg.HorizontalSeparator()],
     [sg.StatusBar(current_password,              # description status box 
                   text_color="green", 
                   background_color='black', 
