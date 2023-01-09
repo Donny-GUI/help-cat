@@ -1,4 +1,7 @@
 # help-cat
+
+### For helping you make long hashcat system commands
+
 A gui that helps you set up your hashcat commands. Provides password examples, system command examples and other features.
 ![Screenshot from 2022-12-07 13-18-53](https://user-images.githubusercontent.com/108424001/206364451-94d4d3dd-6f20-4271-b5c3-828847a6d705.png)
 
@@ -8,7 +11,7 @@ A gui that helps you set up your hashcat commands. Provides password examples, s
 2. added doc string descriptions for functions
 
 
-### For helping you make long hashcat system commands
+
 
 ## TODO
 
