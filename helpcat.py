@@ -27,7 +27,9 @@ added_flags = []
 attack_type = []
 
 
-def get_attack_from_desc(attack_description:str):
+def get_attack_from_desc(attack_description:str) -> str or None:
+    """ given the description of the attack type, will return the number string to use for that attack type """
+
     global attack_type
     attack_type = []
     for index, a in enumerate(attacks):
@@ -36,27 +38,34 @@ def get_attack_from_desc(attack_description:str):
     return None
             
     
-def search_box(search_input:str):
+def search_box(search_input:str) -> str or None:
+    """ fetches the match for the autofill """
+    
     search_box = [x for x in document_names if x.startswith(search_input.lower()) or x.startswith(search_input.upper())]
     try:
         return search_box[0]
     except:
         return None
 
-def get_flag_From_desc(desc:str):
+def get_flag_From_desc(desc:str) -> str or None:
+    """ given the description, will match the flag to use for the command str """
+
     for index, flag in enumerate(flag_desc):
         if desc == flag:
             return flag_flags[index]
     return None
 
-def search_flags(search_input:str):
+def search_flags(search_input:str) -> str or None:
+    """ searches the flags for a match, this is a helper function for the autofill functionality """
+
     flags_search = [x for x in flag_desc if x.startswith(search_input.lower()) or x.startswith(search_input.upper())]
     try:
         return flags_search[0]
     except:
         return None
 
-def make_sequence(string):
+def make_sequence(string: str) -> str:
+    """ assembles the sequence for the command string """
 
     sequences = []
     sequence = str(string).split(']')
@@ -72,14 +81,18 @@ def make_sequence(string):
     x = "".join(sequences)
     return x
 
-def make_examples(password, minimum_length):
+def make_examples(password, minimum_length: int) -> list[str]:
+    """ makes a list of examples to place in the listbox widget """
+
     passwords_ = []
     for x in range(0,minimum_length+1):
         p = make_sequence(password)
         passwords_.append(p)
     return passwords_
 
-def make_command(length,maximum, statusbar_sequence, document_type):
+def make_command(length, maximum, statusbar_sequence: str, document_type: str) -> str:
+    """ makes the command status bar string for display """
+
     global attack_type
     flagsx = " ".join([x for x in added_flags if x != None])
     if attack_type == [] or attack_type[0] == None:
