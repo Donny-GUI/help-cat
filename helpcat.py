@@ -1,5 +1,6 @@
 import PySimpleGUI as sg
 import random
+import pyperclip
 from string import ( 
     ascii_lowercase, 
     ascii_uppercase, 
@@ -25,7 +26,20 @@ attacks = list(attack_types.values())
 attacks_number = list(attack_types.keys())
 added_flags = []
 attack_type = []
+hash_string = "<hash>"
 
+
+def get_hash_from_file(filename: str) -> str:
+    """ providing a filepath, will read the hashfile and return the string """
+    
+    global hash_string
+    if filename == '':
+        return
+    with open(filename, 'r') as rfile:
+        lines = [x.strip("\n") for x in rfile.readlines()]
+    if lines[0] != "":
+        hash_string = lines[0]
+    
 
 def get_attack_from_desc(attack_description:str) -> str or None:
     """ given the description of the attack type, will return the number string to use for that attack type """
@@ -40,7 +54,7 @@ def get_attack_from_desc(attack_description:str) -> str or None:
     
 def search_box(search_input:str) -> str or None:
     """ fetches the match for the autofill """
-    
+
     search_box = [x for x in document_names if x.startswith(search_input.lower()) or x.startswith(search_input.upper())]
     try:
         return search_box[0]
@@ -92,7 +106,7 @@ def make_examples(password, minimum_length: int) -> list[str]:
 
 def make_command(length, maximum, statusbar_sequence: str, document_type: str) -> str:
     """ makes the command status bar string for display """
-
+    global hash_string
     global attack_type
     flagsx = " ".join([x for x in added_flags if x != None])
     if attack_type == [] or attack_type[0] == None:
@@ -118,7 +132,7 @@ def make_command(length, maximum, statusbar_sequence: str, document_type: str) -
         if x.startswith("[i"):
             my_sequence.append('?d')
         x = "".join(my_sequence)
-    cmdstr = f"hashcat {attack} -1 ?l?u?d?s -i {flagsx} --increment-min={length} --increment-max={maximum} {m_tag} {docu} <hash> {x}"
+    cmdstr = f"hashcat {attack} -1 ?l?u?d?s -i {flagsx} --increment-min={length} --increment-max={maximum} {m_tag} {docu} {hash_string} {x}"
     return cmdstr 
 
 
@@ -126,6 +140,7 @@ def main():
     global attack_type
     global current_password
     global added_flags
+    global hash_string
     sg.SetOptions(margins=(0,0), element_padding=(0,0))
     minimum_length = 0
     maximum_length = 8
@@ -138,7 +153,24 @@ def main():
     [sg.T("Hashcat Helpcat", font='ubuntu 24', pad=(5,5))], # title
     [sg.HorizontalSeparator()],
     [sg.T("Search for hash type:"), sg.Input("", key='SEARCH', enable_events=True, pad=(5,5)), 
-     sg.Combo(values=document_names, key='DOC', size=(50,30), enable_events=True)],           # document type
+     sg.Combo(values=document_names, key='DOC', size=(50,30), enable_events=True)],
+    [sg.T("Hash"), 
+        sg.StatusBar(
+            "<hash>", 
+            size=(150, 1), 
+            text_color='green', 
+            background_color='black', 
+            font='ubuntu 8', 
+            key='HASH'), 
+        sg.StatusBar("", 
+            size=(50, 1), 
+            text_color='green', 
+            background_color='black', 
+            font='ubuntu 8', 
+            key="HASHFILE"), 
+        sg.FileBrowse(
+            "Upload Hashfile", 
+            key='BROWSEHASHFILE')],
     [ sg.T("Attack Type        ", size=(17,1), pad=(5,5)), 
     sg.Combo(attacks, enable_events=True, key='ATTACK',pad=(5,5)),
     sg.T("Set minimum length:", pad=(5,5)),
@@ -187,6 +219,7 @@ def main():
               size=(200,1), 
               text_color='green', 
               background_color='black')],       # command output
+    [sg.Button("Copy To Clipboard"), sg.T("Copied to Clipboard!", text_color='Red', background_color='black', visible=False, key='COPIED')],
     [sg.Exit()],]
     w = sg.Window("hash helper", layout)
     
@@ -201,7 +234,23 @@ def main():
         event_key, values = w.read()
         w.refresh()
         document_type=values['DOC']
+        print(event_key, values)
+
+        if w['BROWSEHASHFILE'] != "" or event_key in ['BROWSEHASHFILE', 'Upload Hashfile']:
+            w.refresh()
+            get_hash_from_file(values['BROWSEHASHFILE'])
+            w['HASH'].update(hash_string)
+            w.refresh()
         
+        if event_key == 'Copy To Clipboard':
+            w.refresh()
+            pyperclip.copy(str(values['COMMAND']))
+            w['COPIED'].update(visible=True)
+            w.refresh()
+        else:
+            w['COPIED'].update(visible=False)
+            w.refresh()
+
         if event_key == 'ATTACK':
             atk_desc = values['ATTACK']
             atk = get_attack_from_desc(atk_desc)
@@ -211,7 +260,10 @@ def main():
                         maximum=maximum_length, 
                         statusbar_sequence=current_password,
                         document_type=document_type))
-        
+        if event_key == 'BROWSEHASHFILE':
+            w.refresh()
+            print("event hashfile")
+            print(w["BROWSEHASHFILE"])
         if not w['FLAGS'] == "":
             description = values['FLAGS']
             flag = get_flag_From_desc(description)
