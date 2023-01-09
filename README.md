@@ -16,7 +16,8 @@ A gui that helps you set up your hashcat commands. Provides password examples, s
 ## TODO
 
 1. add 'get hash from encrypted file' button
-2. add 'import hash from file' button
+2. ~add 'import hash from file' button~
+3. ~Copy to Clipboard Functionality~
 
 
 ## linux / macos
