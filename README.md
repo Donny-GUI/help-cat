@@ -7,8 +7,10 @@ A gui that helps you set up your hashcat commands. Provides password examples, s
 
 ## Updates
 
-1. added type hints for functions
+1. added type hints for functions 
 2. added doc string descriptions for functions
+3. Copy To Clipboard Functionality
+4. Import hashfile Functionality
 
 
 
@@ -25,6 +27,7 @@ A gui that helps you set up your hashcat commands. Provides password examples, s
 ```bash
 git clone https://github.com/Donny-GUI/help-cat.git
 cd help-cat
+pip3 install pyperclip
 python3 helpcat.py
 ```
 
@@ -33,6 +36,7 @@ python3 helpcat.py
 ```bash
 git clone https://github.com/Donny-GUI/help-cat.git
 cd help-cat
+pip install pyperclip
 py helpcat.py
 ```
 
